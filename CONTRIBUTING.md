@@ -12,24 +12,6 @@ Queremos manter um ambiente colaborativo, técnico e respeitoso.
 
 ---
 
-## 📦 Estrutura do Projeto
-
-```
-rsp-diecast/
-├── app/ # Código backend (Laravel)
-├── resources/ # Frontend (Blade + Tailwind)
-├── database/ # Migrations e seeders
-├── docs/ # Documentação e imagens
-├── routes/ # Definição das rotas web/API
-├── tests/ # Testes unitários e funcionais
-├── README.md # Descrição do projeto
-└── RSP-Diecast-Relatorio-Tecnico.md # Guia técnico completo
-```
----
-
-
----
-
 ## 🧩 Como Contribuir
 
 ### 1️⃣ Crie um fork do projeto
