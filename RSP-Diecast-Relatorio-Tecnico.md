@@ -72,7 +72,7 @@ Tema inspirado na **Williams Racing**:
 **Desenvolvido por:**  
 Equipe RSP Diecast  
 🌐 [https://rspdiecast.com.br](https://rspdiecast.com.br)  
-📧 contato@rspdiecast.com.br
+📧 mvrgomes@gmail.com
 
 **Licença:** MIT  
 © 2025 – RSP Diecast. Todos os direitos reservados.
