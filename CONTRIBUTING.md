@@ -61,18 +61,20 @@ rsp-diecast/
 
 git clone https://github.com/seuusuario/rsp-diecast.git
 cd rsp-diecast
-3️⃣ Crie uma branch para sua contribuição
+
+### 3️⃣ Crie uma branch para sua contribuição
 bash
 Copy code
 git checkout -b feature/nome-da-funcionalidade
-4️⃣ Faça suas alterações
+
+### 4️⃣ Faça suas alterações
 Mantenha o padrão de código PSR-12 para PHP.
 
 Utilize nomes claros e sem acentos em arquivos e variáveis.
 
 Siga a estrutura e convenções já existentes no projeto.
 
-5️⃣ Teste antes de enviar
+### 5️⃣ Teste antes de enviar
 Execute:
 
 bash
@@ -80,7 +82,7 @@ Copy code
 php artisan test
 Garanta que tudo esteja funcionando antes de abrir o pull request.
 
-6️⃣ Envie o pull request
+### 6️⃣ Envie o pull request
 bash
 Copy code
 git push origin feature/nome-da-funcionalidade
