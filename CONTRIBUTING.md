@@ -19,7 +19,7 @@ Queremos manter um ambiente colaborativo, técnico e respeitoso.
 - Clique em **Fork** no canto superior direito.
 
 ### 2️⃣ Clone seu fork localmente
-```bash
+
 git clone https://github.com/seuusuario/rsp-diecast.git
 cd rsp-diecast
 
@@ -58,7 +58,7 @@ rsp-diecast/
 - Clique em **Fork** no canto superior direito.
 
 ### 2️⃣ Clone seu fork localmente
-```bash
+
 git clone https://github.com/seuusuario/rsp-diecast.git
 cd rsp-diecast
 3️⃣ Crie uma branch para sua contribuição
