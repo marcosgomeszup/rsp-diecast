@@ -53,7 +53,7 @@ Tema inspirado na **Williams Racing**:
 
 ## 📂 Estrutura do Repositório
 
-```bash
+```
 📁 rsp-diecast/
 ├── app/                      # Código Laravel
 ├── public/                   # PWA, imagens e assets
@@ -63,7 +63,7 @@ Tema inspirado na **Williams Racing**:
 ├── storage/                  # Uploads
 ├── README.md                 # Resumo do projeto
 └── RSP-Diecast-Relatorio-Tecnico.md   # Documento técnico completo
-
+```
 
 ---
 
