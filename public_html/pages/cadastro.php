@@ -1,11 +1,25 @@
 <?php
-session_start();
-if (!isset($_SESSION['usuario'])) {
-  header("Location: ../index.php");
-  exit;
+// ==============================
+// CONFIGURAÇÃO DE CONEXÃO MYSQL
+// ==============================
+$servername = "localhost";
+$username = "rspdiecast_usrmaster";
+$password = "X7OjyzhHH2";
+$database = "rspdiecast_dbsystem";
+
+$conn = new mysqli($servername, $username, $password, $database);
+if ($conn->connect_error) {
+  die("Falha na conexão: " . $conn->connect_error);
 }
 
-$usuario = $_SESSION['usuario'];
+// ==============================
+// CONSULTAS PARA OS SELECTS
+// ==============================
+$categorias = $conn->query("SELECT id, nome FROM categorias ORDER BY nome");
+$equipes = $conn->query("SELECT id, nome FROM equipes ORDER BY nome");
+$pilotos = $conn->query("SELECT id, nome FROM pilotos ORDER BY nome");
+$marcas = $conn->query("SELECT id, nome FROM marcas ORDER BY nome");
+$fabricantes = $conn->query("SELECT id, nome FROM fabricantes ORDER BY nome");
 ?>
 
 <!DOCTYPE html>
@@ -13,209 +27,137 @@ $usuario = $_SESSION['usuario'];
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RSP Diecast | Cadastro de Carro</title>
-  <link rel="stylesheet" href="../css/style.css">
-  <style>
-    body {
-      background-color: #001B44;
-      color: #fff;
-      font-family: "Montserrat", sans-serif;
-      margin: 0;
-      display: flex;
-      height: 100vh;
-    }
+  <title>Cadastro de Miniaturas | RSP Diecast</title>
 
-    .sidebar {
-      width: 240px;
-      background-color: #00205B;
-      padding: 20px;
+  <style>
+    :root {
+      --azul-escuro: #00205B;
+      --azul-claro: #00AEEF;
+      --branco: #FFFFFF;
+      --cinza: #CFCFCF;
+    }
+    * {
+      box-sizing: border-box;
+      font-family: "Montserrat", sans-serif;
+    }
+    body {
+      background-color: var(--azul-escuro);
+      color: var(--branco);
+      margin: 0;
+      padding: 40px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      align-items: center;
     }
-
-    .sidebar img {
-      width: 150px;
-      margin-bottom: 30px;
-    }
-
-    .menu a {
-      display: block;
-      color: #CFCFCF;
-      text-decoration: none;
-      padding: 12px 15px;
-      border-radius: 8px;
-      margin: 6px 0;
-      transition: 0.3s;
-    }
-
-    .menu a:hover {
-      background-color: #00AEEF;
-      color: #fff;
-    }
-
-    .content {
-      flex: 1;
-      padding: 40px;
-      overflow-y: auto;
-    }
-
     h1 {
-      color: #00AEEF;
+      color: var(--azul-claro);
       margin-bottom: 20px;
     }
-
     form {
-      background: #0A2A6B;
-      border: 1px solid #00AEEF;
-      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
       padding: 30px;
-      max-width: 800px;
-      margin: 0 auto;
-      box-shadow: 0 0 20px rgba(0, 174, 239, 0.2);
+      border-radius: 12px;
+      max-width: 700px;
+      width: 100%;
     }
-
     label {
       display: block;
       margin-top: 15px;
-      font-weight: 500;
+      font-weight: 600;
+      color: var(--azul-claro);
     }
-
     input, select {
       width: 100%;
       padding: 10px;
       margin-top: 5px;
+      border-radius: 8px;
       border: none;
-      border-radius: 6px;
-      background: #1b2e5a;
-      color: #fff;
-      font-size: 1rem;
+      background: #fff;
+      color: #000;
     }
-
-    input[type="file"] {
-      background: none;
-      border: none;
-      color: #CFCFCF;
-    }
-
-    .preview {
+    .upload {
       display: flex;
-      gap: 15px;
-      margin-top: 15px;
+      gap: 10px;
+      margin-top: 10px;
     }
-
-    .preview img {
-      width: 100px;
-      height: 70px;
-      object-fit: cover;
-      border-radius: 8px;
-      border: 2px solid #00AEEF;
-    }
-
     button {
-      background-color: #00AEEF;
-      color: #fff;
-      font-weight: bold;
-      padding: 12px 20px;
+      background-color: var(--azul-claro);
+      color: var(--branco);
       border: none;
       border-radius: 8px;
-      margin-top: 20px;
+      padding: 12px 20px;
+      font-size: 1rem;
       cursor: pointer;
-      transition: 0.3s;
+      margin-top: 20px;
     }
-
     button:hover {
-      background-color: #008fcc;
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 40px;
-      font-size: 0.9rem;
-      color: #9FA3A9;
+      background-color: #007bbd;
     }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
-    <div>
-      <img src="../imagens/logo.png" alt="RSP Diecast">
-      <nav class="menu">
-        <a href="dashboard.php">🏠 Início</a>
-        <a href="cadastro.php">📝 Cadastrar Carro</a>
-        <a href="listagem.php">📋 Listagem</a>
-        <a href="relatorios.php">📊 Relatórios</a>
-      </nav>
+  <h1>Cadastro de Miniatura</h1>
+
+  <form action="salvar_carro.php" method="POST" enctype="multipart/form-data">
+    <label for="ano">Ano</label>
+    <input type="number" id="ano" name="ano" required>
+
+    <label for="modelo">Modelo</label>
+    <input type="text" id="modelo" name="modelo" required>
+
+    <label for="codigo">Código</label>
+    <input type="text" id="codigo" name="codigo" required>
+
+    <label for="categoria">Categoria</label>
+    <select id="categoria" name="categoria_id" required>
+      <option value="">Selecione...</option>
+      <?php while ($cat = $categorias->fetch_assoc()): ?>
+        <option value="<?= $cat['id'] ?>"><?= $cat['nome'] ?></option>
+      <?php endwhile; ?>
+    </select>
+
+    <label for="equipe">Equipe</label>
+    <select id="equipe" name="equipe_id">
+      <option value="">Selecione...</option>
+      <?php while ($eq = $equipes->fetch_assoc()): ?>
+        <option value="<?= $eq['id'] ?>"><?= $eq['nome'] ?></option>
+      <?php endwhile; ?>
+    </select>
+
+    <label for="piloto">Piloto</label>
+    <select id="piloto" name="piloto_id">
+      <option value="">Selecione...</option>
+      <?php while ($p = $pilotos->fetch_assoc()): ?>
+        <option value="<?= $p['id'] ?>"><?= $p['nome'] ?></option>
+      <?php endwhile; ?>
+    </select>
+
+    <label for="marca">Marca</label>
+    <select id="marca" name="marca_id">
+      <option value="">Selecione...</option>
+      <?php while ($m = $marcas->fetch_assoc()): ?>
+        <option value="<?= $m['id'] ?>"><?= $m['nome'] ?></option>
+      <?php endwhile; ?>
+    </select>
+
+    <label for="fabricante">Fabricante</label>
+    <select id="fabricante" name="fabricante_id">
+      <option value="">Selecione...</option>
+      <?php while ($f = $fabricantes->fetch_assoc()): ?>
+        <option value="<?= $f['id'] ?>"><?= $f['nome'] ?></option>
+      <?php endwhile; ?>
+    </select>
+
+    <label>Fotos (até 3 imagens)</label>
+    <div class="upload">
+      <input type="file" name="foto1" accept="image/*">
+      <input type="file" name="foto2" accept="image/*">
+      <input type="file" name="foto3" accept="image/*">
     </div>
-  </div>
 
-  <div class="content">
-    <h1>Cadastro de Carros e Miniaturas</h1>
-
-    <form id="formCadastro" action="../api/salvar_carro.php" method="POST" enctype="multipart/form-data">
-      <h3>📄 Referências do Carro</h3>
-
-      <label for="ano">Ano</label>
-      <input type="number" name="ano" id="ano" required>
-
-      <label for="equipe">Equipe</label>
-      <input type="text" name="equipe" id="equipe" required>
-
-      <label for="modelo">Modelo</label>
-      <input type="text" name="modelo" id="modelo" required>
-
-      <label for="categoria">Categoria</label>
-      <select name="categoria" id="categoria" required>
-        <option value="">Selecione</option>
-        <option>Fórmula 1</option>
-        <option>Rally</option>
-        <option>Endurance</option>
-        <option>Stock Car</option>
-      </select>
-
-      <label for="piloto">Piloto</label>
-      <input type="text" name="piloto" id="piloto" required>
-
-      <h3>🏎️ Miniatura</h3>
-
-      <label for="marca">Marca</label>
-      <input type="text" name="marca" id="marca" required>
-
-      <label for="codigo">Código</label>
-      <input type="text" name="codigo" id="codigo" required>
-
-      <label for="fabricante">Fabricante</label>
-      <input type="text" name="fabricante" id="fabricante" required>
-
-      <h3>🖼️ Fotos (até 3 imagens)</h3>
-      <input type="file" name="fotos[]" id="fotos" accept="image/*" multiple required>
-      <div class="preview" id="preview"></div>
-
-      <button type="submit">Salvar Cadastro</button>
-    </form>
-
-    <footer>© 2025 RSP Diecast • Coleção Racing</footer>
-  </div>
-
-  <script>
-    // Preview das imagens
-    document.getElementById('fotos').addEventListener('change', function(event) {
-      const preview = document.getElementById('preview');
-      preview.innerHTML = '';
-      const files = event.target.files;
-
-      for (let i = 0; i < Math.min(files.length, 3); i++) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const img = document.createElement('img');
-          img.src = e.target.result;
-          preview.appendChild(img);
-        };
-        reader.readAsDataURL(files[i]);
-      }
-    });
-  </script>
+    <button type="submit">Salvar Miniatura</button>
+  </form>
 
 </body>
 </html>
