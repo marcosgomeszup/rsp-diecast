@@ -1,7 +1,4 @@
 <?php
-// ===================================
-// CONFIGURAÇÃO DE CONEXÃO AO BANCO
-// ===================================
 $servername = "localhost";
 $username = "rspdiecast_usrmaster";
 $password = "X7OjyzhHH2";
@@ -12,13 +9,9 @@ if ($conn->connect_error) {
     die("Falha na conexão: " . $conn->connect_error);
 }
 
-// ===================================
-// CONSULTA OS CARROS CADASTRADOS
-// ===================================
 $sql = "SELECT * FROM carros ORDER BY id DESC";
 $result = $conn->query($sql);
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -29,20 +22,42 @@ $result = $conn->query($sql);
     --azul-escuro: #00205B;
     --azul-claro: #00AEEF;
     --branco: #FFFFFF;
-    --cinza: #CCCCCC;
     --vermelho: #FF6666;
   }
 
-  * {
-    box-sizing: border-box;
-    font-family: "Montserrat", sans-serif;
-  }
+  * { box-sizing: border-box; font-family: "Montserrat", sans-serif; }
 
   body {
     background: var(--azul-escuro);
     color: var(--branco);
     margin: 0;
-    padding: 20px;
+    padding-top: 80px; /* espaço para o menu fixo */
+  }
+
+  /* ===== MENU SUPERIOR ===== */
+  .menu {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    background: var(--azul-escuro);
+    border-bottom: 2px solid var(--azul-claro);
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 15px 0;
+    z-index: 1000;
+  }
+
+  .menu a {
+    color: var(--branco);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: 0.2s;
+  }
+
+  .menu a:hover {
+    color: var(--azul-claro);
   }
 
   h1 {
@@ -56,6 +71,7 @@ $result = $conn->query($sql);
     flex-wrap: wrap;
     justify-content: center;
     gap: 25px;
+    padding: 0 15px;
   }
 
   .card {
@@ -68,10 +84,7 @@ $result = $conn->query($sql);
     text-align: center;
   }
 
-  .card:hover {
-    background: rgba(255,255,255,0.1);
-    transform: scale(1.02);
-  }
+  .card:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
 
   .fotos {
     display: flex;
@@ -90,9 +103,7 @@ $result = $conn->query($sql);
     transition: 0.2s;
   }
 
-  .fotos img:hover {
-    border-color: var(--azul-claro);
-  }
+  .fotos img:hover { border-color: var(--azul-claro); }
 
   .overlay {
     position: fixed;
@@ -105,15 +116,9 @@ $result = $conn->query($sql);
     z-index: 9999;
   }
 
-  .overlay img {
-    max-width: 90%;
-    max-height: 90%;
-    border-radius: 10px;
-  }
+  .overlay img { max-width: 90%; max-height: 90%; border-radius: 10px; }
 
-  .acoes {
-    margin-top: 12px;
-  }
+  .acoes { margin-top: 12px; }
 
   .acoes a {
     text-decoration: none;
@@ -121,13 +126,8 @@ $result = $conn->query($sql);
     margin: 0 8px;
   }
 
-  .acoes a.editar {
-    color: var(--azul-claro);
-  }
-
-  .acoes a.excluir {
-    color: var(--vermelho);
-  }
+  .acoes a.editar { color: var(--azul-claro); }
+  .acoes a.excluir { color: var(--vermelho); }
 
   .voltar {
     display: block;
@@ -143,14 +143,17 @@ $result = $conn->query($sql);
     transition: 0.2s;
   }
 
-  .voltar:hover {
-    background: var(--branco);
-    color: var(--azul-escuro);
-  }
-
+  .voltar:hover { background: var(--branco); color: var(--azul-escuro); }
 </style>
 </head>
 <body>
+
+<!-- ===== MENU FIXO ===== -->
+<nav class="menu">
+  <a href="dashboard.php">📊 Dashboard</a>
+  <a href="cadastro.php">➕ Cadastrar</a>
+  <a href="listar_carros.php">📋 Listagem</a>
+</nav>
 
 <h1>Miniaturas Cadastradas</h1>
 
@@ -162,10 +165,8 @@ $result = $conn->query($sql);
       <p><strong>Ano:</strong> <?= htmlspecialchars($row['ano']) ?></p>
       <p><strong>Código:</strong> <?= htmlspecialchars($row['codigo']) ?></p>
 
-      <?php
-        $fotos = json_decode($row['fotos'], true);
-        if (!empty($fotos)):
-      ?>
+      <?php $fotos = json_decode($row['fotos'], true);
+      if (!empty($fotos)): ?>
       <div class="fotos">
         <?php foreach ($fotos as $foto): ?>
           <img src="../<?= htmlspecialchars($foto) ?>" alt="Miniatura" onclick="ampliarImagem(this)">
@@ -191,16 +192,15 @@ $result = $conn->query($sql);
 </div>
 
 <script>
-  function ampliarImagem(el) {
-    const overlay = document.getElementById("overlay");
-    const img = document.getElementById("imgAmpliada");
-    img.src = el.src;
-    overlay.style.display = "flex";
-  }
-
-  function fecharOverlay() {
-    document.getElementById("overlay").style.display = "none";
-  }
+function ampliarImagem(el) {
+  const overlay = document.getElementById("overlay");
+  const img = document.getElementById("imgAmpliada");
+  img.src = el.src;
+  overlay.style.display = "flex";
+}
+function fecharOverlay() {
+  document.getElementById("overlay").style.display = "none";
+}
 </script>
 
 </body>
