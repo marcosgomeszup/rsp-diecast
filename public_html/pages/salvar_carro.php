@@ -104,5 +104,6 @@ $conn->close();
 <body>
   <h1><?= $mensagem ?></h1>
   <a href="cadastro.php">← Voltar ao Cadastro</a>
+
 </body>
 </html>
