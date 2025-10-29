@@ -100,8 +100,27 @@ $fabricantes = $conn->query("SELECT id, nome FROM fabricantes ORDER BY nome");
   <h1>Cadastro de Miniatura</h1>
 
   <form action="salvar_carro.php" method="POST" enctype="multipart/form-data">
-    <label for="ano">Ano</label>
-    <input type="number" id="ano" name="ano" required>
+ <label for="ano">Ano</label>
+<select id="ano" name="ano" required>
+  <option value="">Selecione o ano...</option>
+  <?php
+  // Garante que existe uma conexão com o banco ativa
+  $servername = "localhost";
+  $username = "rspdiecast_usrmaster";
+  $password = "X7OjyzhHH2";
+  $database = "rspdiecast_dbsystem";
+  $conn = new mysqli($servername, $username, $password, $database);
+  if ($conn->connect_error) {
+      die("Erro de conexão: " . $conn->connect_error);
+  }
+
+  $anos = $conn->query("SELECT ano FROM anos ORDER BY ano DESC");
+  while ($a = $anos->fetch_assoc()):
+  ?>
+    <option value="<?= $a['ano'] ?>"><?= $a['ano'] ?></option>
+  <?php endwhile; ?>
+</select>
+
 
     <label for="modelo">Modelo</label>
     <input type="text" id="modelo" name="modelo" required>

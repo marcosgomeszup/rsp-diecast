@@ -1,177 +1,222 @@
 <?php
-// ===============================================
-// RSP Diecast – Dashboard Principal
-// ===============================================
+// ===================================
+// CONEXÃO COM O BANCO
+// ===================================
+$servername = "localhost";
+$username = "rspdiecast_usrmaster";
+$password = "X7OjyzhHH2";
+$database = "rspdiecast_dbsystem";
 
-session_start();
-
-// Verifica se há sessão ativa
-if (!isset($_SESSION['usuario'])) {
-    header("Location: ../index.php");
-    exit;
+$conn = new mysqli($servername, $username, $password, $database);
+if ($conn->connect_error) {
+    die("Falha na conexão: " . $conn->connect_error);
 }
 
-// Dados do usuário logado
-$usuario = $_SESSION['usuario'];
+// =======================
+// COLETA DE DADOS
+// =======================
+
+// Total de miniaturas
+$total = $conn->query("SELECT COUNT(*) AS total FROM carros")->fetch_assoc()['total'];
+
+// Contagem por fabricante
+$fabricantes = $conn->query("
+    SELECT f.nome AS fabricante, COUNT(c.id) AS total
+    FROM carros c
+    JOIN fabricantes f ON c.fabricante_id = f.id
+    GROUP BY f.nome
+");
+
+// Contagem por equipe
+$equipes = $conn->query("
+    SELECT e.nome AS equipe, COUNT(c.id) AS total
+    FROM carros c
+    JOIN equipes e ON c.equipe_id = e.id
+    GROUP BY e.nome
+");
+
+// Contagem por categoria
+$categorias = $conn->query("
+    SELECT ca.nome AS categoria, COUNT(c.id) AS total
+    FROM carros c
+    JOIN categorias ca ON c.categoria_id = ca.id
+    GROUP BY ca.nome
+");
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RSP Diecast | Painel</title>
-  <link rel="stylesheet" href="../css/style.css">
-  <style>
-    body {
-      font-family: "Montserrat", sans-serif;
-      background-color: #001B44;
-      color: #fff;
-      margin: 0;
-      display: flex;
-      height: 100vh;
-    }
+<meta charset="UTF-8">
+<title>Dashboard | RSP Diecast</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --azul-escuro: #00205B;
+    --azul-claro: #00AEEF;
+    --branco: #FFFFFF;
+    --cinza: #CFCFCF;
+  }
 
-    .sidebar {
-      width: 240px;
-      background-color: #00205B;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 20px;
-      box-shadow: 3px 0 10px rgba(0, 0, 0, 0.3);
-    }
+  body {
+    background: var(--azul-escuro);
+    color: var(--branco);
+    font-family: "Montserrat", sans-serif;
+    margin: 0;
+    padding-top: 80px;
+  }
 
-    .sidebar img {
-      width: 160px;
-      margin: 0 auto 30px;
-      display: block;
-    }
+  .menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--azul-escuro);
+    border-bottom: 2px solid var(--azul-claro);
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 15px 0;
+    z-index: 1000;
+  }
 
-    .menu a {
-      display: block;
-      color: #CFCFCF;
-      text-decoration: none;
-      padding: 12px 15px;
-      border-radius: 8px;
-      margin: 6px 0;
-      transition: 0.3s;
-    }
+  .menu a {
+    color: var(--branco);
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.2s;
+  }
 
-    .menu a:hover {
-      background-color: #00AEEF;
-      color: #fff;
-    }
+  .menu a:hover {
+    color: var(--azul-claro);
+  }
 
-    .content {
-      flex: 1;
-      padding: 40px;
-      background: linear-gradient(145deg, #00205B, #001B44);
-      overflow-y: auto;
-    }
+  h1 {
+    text-align: center;
+    color: var(--azul-claro);
+    margin-bottom: 40px;
+  }
 
-    .content h1 {
-      color: #00AEEF;
-      font-size: 1.8rem;
-      margin-bottom: 10px;
-    }
+  .cards {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 25px;
+    margin-bottom: 40px;
+  }
 
-    .content p {
-      color: #CFCFCF;
-      font-size: 1rem;
-      margin-bottom: 25px;
-    }
+  .card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--azul-claro);
+    border-radius: 12px;
+    padding: 20px;
+    width: 220px;
+    text-align: center;
+  }
 
-    .quick-actions {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
+  .card h2 {
+    color: var(--azul-claro);
+    font-size: 2.2rem;
+    margin: 0;
+  }
 
-    .card {
-      background-color: #0A2A6B;
-      border: 1px solid #00AEEF;
-      border-radius: 12px;
-      padding: 20px;
-      width: 260px;
-      text-align: center;
-      color: #fff;
-      text-decoration: none;
-      transition: 0.3s;
-    }
+  .charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 40px;
+    padding: 0 40px 60px;
+  }
 
-    .card:hover {
-      background-color: #00AEEF;
-      color: #001B44;
-      transform: translateY(-4px);
-    }
-
-    footer {
-      text-align: center;
-      padding: 10px;
-      font-size: 0.8rem;
-      color: #9FA3A9;
-    }
-
-    .logout {
-      display: block;
-      text-align: center;
-      color: #FF6B6B;
-      text-decoration: none;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
-    .logout:hover {
-      color: #FF4444;
-    }
-  </style>
+  canvas {
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 15px;
+  }
+</style>
 </head>
 <body>
 
-  <div class="sidebar">
-    <div>
-      <img src="../imagens/logo.png" alt="RSP Diecast Logo">
-      <nav class="menu">
-        <a href="dashboard.php">🏠 Início</a>
-        <a href="cadastro.php">📝 Cadastrar Carro</a>
-        <a href="listagem.php">📋 Listagem</a>
-        <a href="relatorios.php">📊 Relatórios</a>
-      </nav>
-    </div>
+<!-- MENU FIXO -->
+<nav class="menu">
+  <a href="dashboard.php">📊 Dashboard</a>
+  <a href="cadastro.php">➕ Cadastrar</a>
+  <a href="listar_carros.php">📋 Listagem</a>
+</nav>
 
-    <div>
-      <hr style="border-color:#004080;">
-      <p style="text-align:center; font-size:0.9rem;">Olá, <strong><?= htmlspecialchars($usuario['nome']); ?></strong></p>
-      <a href="../logout.php" class="logout">Sair</a>
-    </div>
+<h1>📊 Painel de Estatísticas</h1>
+
+<div class="cards">
+  <div class="card">
+    <p>Total de Miniaturas</p>
+    <h2><?= $total ?></h2>
   </div>
+</div>
 
-  <div class="content">
-    <h1>Bem-vindo, <?= htmlspecialchars($usuario['nome']); ?> 👋</h1>
-    <p>Escolha uma das opções no menu lateral para gerenciar sua coleção.</p>
-
-    <div class="quick-actions">
-      <a href="cadastro.php" class="card">
-        <h3>➕ Cadastrar Carro</h3>
-        <p>Adicione um novo carro ou miniatura à coleção.</p>
-      </a>
-
-      <a href="listagem.php" class="card">
-        <h3>📋 Listagem</h3>
-        <p>Visualize todos os carros cadastrados e suas informações.</p>
-      </a>
-
-      <a href="relatorios.php" class="card">
-        <h3>📊 Relatórios</h3>
-        <p>Exporte dados em formato CSV ou XLS.</p>
-      </a>
-    </div>
-
-    <footer>
-      <p>© 2025 RSP Diecast • Coleção Racing</p>
-    </footer>
+<div class="charts">
+  <div>
+    <canvas id="graficoFabricantes"></canvas>
   </div>
+  <div>
+    <canvas id="graficoEquipes"></canvas>
+  </div>
+  <div>
+    <canvas id="graficoCategorias"></canvas>
+  </div>
+</div>
+
+<script>
+const ctxFabricantes = document.getElementById('graficoFabricantes');
+const ctxEquipes = document.getElementById('graficoEquipes');
+const ctxCategorias = document.getElementById('graficoCategorias');
+
+new Chart(ctxFabricantes, {
+  type: 'pie',
+  data: {
+    labels: [<?php while($f = $fabricantes->fetch_assoc()) { echo "'".$f['fabricante']."',"; } ?>],
+    datasets: [{
+      label: 'Por Fabricante',
+      data: [<?php
+        $fabricantes->data_seek(0);
+        while($f = $fabricantes->fetch_assoc()) { echo $f['total'].","; }
+      ?>],
+      backgroundColor: ['#00AEEF', '#005EB8', '#0076CE', '#A2D5F2', '#89CFF0']
+    }]
+  }
+});
+
+new Chart(ctxEquipes, {
+  type: 'bar',
+  data: {
+    labels: [<?php while($e = $equipes->fetch_assoc()) { echo "'".$e['equipe']."',"; } ?>],
+    datasets: [{
+      label: 'Por Equipe',
+      data: [<?php
+        $equipes->data_seek(0);
+        while($e = $equipes->fetch_assoc()) { echo $e['total'].","; }
+      ?>],
+      backgroundColor: '#00AEEF'
+    }]
+  },
+  options: { scales: { y: { beginAtZero: true } } }
+});
+
+new Chart(ctxCategorias, {
+  type: 'doughnut',
+  data: {
+    labels: [<?php while($c = $categorias->fetch_assoc()) { echo "'".$c['categoria']."',"; } ?>],
+    datasets: [{
+      label: 'Por Categoria',
+      data: [<?php
+        $categorias->data_seek(0);
+        while($c = $categorias->fetch_assoc()) { echo $c['total'].","; }
+      ?>],
+      backgroundColor: ['#00AEEF', '#005EB8', '#0076CE', '#A2D5F2', '#89CFF0']
+    }]
+  }
+});
+</script>
 
 </body>
 </html>
