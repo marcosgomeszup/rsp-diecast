@@ -18,41 +18,59 @@ if ($conn->connect_error) {
 $ano = $_POST['ano'] ?? null;
 $modelo = $_POST['modelo'] ?? null;
 $codigo = $_POST['codigo'] ?? null;
+$escala = $_POST['escala'] ?? null;
 $categoria_id = $_POST['categoria_id'] ?? null;
 $equipe_id = $_POST['equipe_id'] ?? null;
 $piloto_id = $_POST['piloto_id'] ?? null;
 $marca_id = $_POST['marca_id'] ?? null;
 $fabricante_id = $_POST['fabricante_id'] ?? null;
+$comentario = $_POST['comentario'] ?? null;
 
 // ===================================
-// UPLOAD DE FOTOS
+// UPLOAD DE FOTOS — AJUSTADO
 // ===================================
-$uploadDir = "uploads/";
+$uploadDir = realpath(__DIR__ . '/../uploads/') . '/';
+
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 
 $fotos = [];
+
 for ($i = 1; $i <= 3; $i++) {
     if (!empty($_FILES["foto$i"]["name"])) {
+        $ext = strtolower(pathinfo($_FILES["foto$i"]["name"], PATHINFO_EXTENSION));
+        $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
+
+        if (!in_array($ext, $permitidas)) {
+            $mensagem = "❌ Formato de imagem inválido em foto $i. Use JPG, PNG ou WEBP.";
+            include 'mensagem.php';
+            exit;
+        }
+
         $fileName = time() . "_foto$i_" . basename($_FILES["foto$i"]["name"]);
-        $targetPath = $uploadDir . $fileName;
-        if (move_uploaded_file($_FILES["foto$i"]["tmp_name"], $targetPath)) {
-            $fotos[] = $targetPath;
+        $destinoCompleto = $uploadDir . $fileName;
+
+        if (move_uploaded_file($_FILES["foto$i"]["tmp_name"], $destinoCompleto)) {
+            $fotos[] = 'uploads/' . $fileName;
+        } else {
+            $mensagem = "❌ Erro ao enviar a imagem $i.";
+            include 'mensagem.php';
+            exit;
         }
     }
 }
 
-// Transforma as fotos em texto JSON para salvar no banco
 $fotosJSON = !empty($fotos) ? json_encode($fotos) : null;
 
 // ===================================
 // INSERÇÃO NO BANCO
 // ===================================
 $stmt = $conn->prepare("INSERT INTO carros 
-(ano, modelo, codigo, categoria_id, equipe_id, piloto_id, marca_id, fabricante_id, fotos)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("issiiiiis", $ano, $modelo, $codigo, $categoria_id, $equipe_id, $piloto_id, $marca_id, $fabricante_id, $fotosJSON);
+(ano, modelo, codigo, escala, categoria_id, equipe_id, piloto_id, marca_id, fabricante_id, fotos, comentario)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+$stmt->bind_param("isssiiiiiss", $ano, $modelo, $codigo, $escala, $categoria_id, $equipe_id, $piloto_id, $marca_id, $fabricante_id, $fotosJSON, $comentario);
 
 if ($stmt->execute()) {
     $mensagem = "✅ Miniatura cadastrada com sucesso!";
@@ -87,23 +105,18 @@ $conn->close();
       height: 100vh;
       text-align: center;
     }
-    h1 {
-      color: var(--azul-claro);
-    }
+    h1 { color: var(--azul-claro); }
     a {
       margin-top: 20px;
       color: var(--azul-claro);
       text-decoration: none;
       font-weight: bold;
     }
-    a:hover {
-      color: var(--branco);
-    }
+    a:hover { color: var(--branco); }
   </style>
 </head>
 <body>
   <h1><?= $mensagem ?></h1>
   <a href="cadastro.php">← Voltar ao Cadastro</a>
-
 </body>
 </html>

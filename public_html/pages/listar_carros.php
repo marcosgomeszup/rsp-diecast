@@ -23,6 +23,7 @@ $result = $conn->query($sql);
     --azul-claro: #00AEEF;
     --branco: #FFFFFF;
     --vermelho: #FF6666;
+    --cinza: #CFCFCF;
   }
 
   * { box-sizing: border-box; font-family: "Montserrat", sans-serif; }
@@ -31,10 +32,9 @@ $result = $conn->query($sql);
     background: var(--azul-escuro);
     color: var(--branco);
     margin: 0;
-    padding-top: 80px; /* espaço para o menu fixo */
+    padding-top: 80px;
   }
 
-  /* ===== MENU SUPERIOR ===== */
   .menu {
     position: fixed;
     top: 0; left: 0;
@@ -56,9 +56,7 @@ $result = $conn->query($sql);
     transition: 0.2s;
   }
 
-  .menu a:hover {
-    color: var(--azul-claro);
-  }
+  .menu a:hover { color: var(--azul-claro); }
 
   h1 {
     text-align: center;
@@ -116,7 +114,11 @@ $result = $conn->query($sql);
     z-index: 9999;
   }
 
-  .overlay img { max-width: 90%; max-height: 90%; border-radius: 10px; }
+  .overlay img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 10px;
+  }
 
   .acoes { margin-top: 12px; }
 
@@ -144,11 +146,31 @@ $result = $conn->query($sql);
   }
 
   .voltar:hover { background: var(--branco); color: var(--azul-escuro); }
+
+  .no-image {
+    width: 90px;
+    height: 70px;
+    background: var(--cinza);
+    color: var(--azul-escuro);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+
+  .comentario {
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.9rem;
+    margin-top: 10px;
+    color: var(--cinza);
+  }
 </style>
 </head>
 <body>
 
-<!-- ===== MENU FIXO ===== -->
 <nav class="menu">
   <a href="dashboard.php">📊 Dashboard</a>
   <a href="cadastro.php">➕ Cadastrar</a>
@@ -163,15 +185,29 @@ $result = $conn->query($sql);
     <div class="card">
       <h2><?= htmlspecialchars($row['modelo']) ?></h2>
       <p><strong>Ano:</strong> <?= htmlspecialchars($row['ano']) ?></p>
+      <p><strong>Escala:</strong> <?= htmlspecialchars($row['escala']) ?></p>
       <p><strong>Código:</strong> <?= htmlspecialchars($row['codigo']) ?></p>
 
-      <?php $fotos = json_decode($row['fotos'], true);
+      <?php 
+      $fotos = json_decode($row['fotos'], true);
       if (!empty($fotos)): ?>
-      <div class="fotos">
-        <?php foreach ($fotos as $foto): ?>
-          <img src="../<?= htmlspecialchars($foto) ?>" alt="Miniatura" onclick="ampliarImagem(this)">
-        <?php endforeach; ?>
-      </div>
+        <div class="fotos">
+          <?php foreach ($fotos as $foto): 
+            $caminhoFoto = '/'. htmlspecialchars($foto);
+            $caminhoServidor = $_SERVER['DOCUMENT_ROOT'] . '/' . $foto;
+            if (!file_exists($caminhoServidor)) {
+              echo '<div class="no-image">Sem Foto</div>';
+            } else {
+              echo '<img src="' . $caminhoFoto . '" alt="Miniatura" onclick="ampliarImagem(this)">';
+            }
+          endforeach; ?>
+        </div>
+      <?php else: ?>
+        <div class="no-image">Sem Foto</div>
+      <?php endif; ?>
+
+      <?php if (!empty($row['comentario'])): ?>
+        <div class="comentario"><?= nl2br(htmlspecialchars($row['comentario'])) ?></div>
       <?php endif; ?>
 
       <div class="acoes">
