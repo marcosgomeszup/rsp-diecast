@@ -11,7 +11,9 @@ if ($conn->connect_error) {
     die("Falha na conexão: " . $conn->connect_error);
 }
 
-// Busca dados das tabelas auxiliares
+// ===============================
+// BUSCA DE DADOS AUXILIARES
+// ===============================
 $anos = $conn->query("SELECT ano FROM anos ORDER BY ano DESC");
 $categorias = $conn->query("SELECT id, nome FROM categorias ORDER BY nome ASC");
 $equipes = $conn->query("SELECT id, nome FROM equipes ORDER BY nome ASC");
@@ -32,14 +34,40 @@ $fabricantes = $conn->query("SELECT id, nome FROM fabricantes ORDER BY nome ASC"
       --cinza: #CFCFCF;
       --vermelho: #FF6666;
     }
+
     * { box-sizing: border-box; font-family: "Montserrat", sans-serif; }
 
     body {
       background: var(--azul-escuro);
       color: var(--branco);
       margin: 0;
-      padding-bottom: 80px;
+      padding-top: 80px;
+      padding-bottom: 100px;
     }
+
+    /* ===== MENU FIXO ===== */
+    .menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: var(--azul-escuro);
+      border-bottom: 2px solid var(--azul-claro);
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding: 15px 0;
+      z-index: 1000;
+    }
+
+    .menu a {
+      color: var(--branco);
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    .menu a:hover { color: var(--azul-claro); }
 
     h1 {
       text-align: center;
@@ -49,7 +77,7 @@ $fabricantes = $conn->query("SELECT id, nome FROM fabricantes ORDER BY nome ASC"
 
     form {
       max-width: 900px;
-      margin: 30px auto;
+      margin: 40px auto;
       background: rgba(255,255,255,0.05);
       padding: 25px 40px;
       border-radius: 15px;
@@ -67,6 +95,7 @@ $fabricantes = $conn->query("SELECT id, nome FROM fabricantes ORDER BY nome ASC"
       color: var(--azul-claro);
       font-weight: bold;
       padding: 0 10px;
+      font-size: 1.1rem;
     }
 
     label {
@@ -134,6 +163,13 @@ $fabricantes = $conn->query("SELECT id, nome FROM fabricantes ORDER BY nome ASC"
   </style>
 </head>
 <body>
+
+<!-- ===== MENU FIXO ===== -->
+<nav class="menu">
+  <a href="dashboard.php">📊 Dashboard</a>
+  <a href="cadastro.php">➕ Cadastrar</a>
+  <a href="listar_carros.php">📋 Listagem</a>
+</nav>
 
 <h1>Cadastro de Miniatura</h1>
 
@@ -216,7 +252,7 @@ $fabricantes = $conn->query("SELECT id, nome FROM fabricantes ORDER BY nome ASC"
     </div>
   </fieldset>
 
-  <button type="submit">Salvar Miniatura</button>
+  <button type="submit">💾 Salvar Miniatura</button>
   <a href="listar_carros.php" class="voltar">← Voltar à Listagem</a>
 </form>
 
