@@ -140,10 +140,11 @@ $conn->close();
 
 <!-- MENU FIXO -->
 <nav class="menu">
-  <a href="dashboard.php">📊 Dashboard</a>
-  <a href="cadastro.php">➕ Cadastrar</a>
-  <a href="listar_carros.php">📋 Listagem</a>
+  <a href="/pages/dashboard.php">📊 Dashboard</a>
+  <a href="/pages/cadastro.php">➕ Cadastrar</a>
+  <a href="/pages/listar_carros.php">📋 Listagem</a>
 </nav>
+
 
 <h1>📊 Painel de Estatísticas</h1>
 
