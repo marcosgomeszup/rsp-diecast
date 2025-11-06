@@ -9,7 +9,7 @@ session_start();
 
 // Se o usuário já estiver logado, redireciona para o dashboard
 if (isset($_SESSION['usuario'])) {
-    header("Location: pages/dashboard.php");
+    header("Location: pages/index.php");
     exit;
 }
 
