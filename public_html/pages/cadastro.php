@@ -1,5 +1,14 @@
 <?php
 // ===================================
+// LOGIN OBRIGATÓRIO
+// ===================================
+session_start();
+if (!isset($_SESSION['usuario'])) {
+    header("Location: ../index.php");
+    exit;
+}
+
+// ===================================
 // CONFIGURAÇÃO DE CONEXÃO AO BANCO
 // ===================================
 $servername = "localhost";
@@ -7,24 +16,38 @@ $username = "rspdiecast_usrmaster";
 $password = "X7OjyzhHH2";
 $database = "rspdiecast_dbsystem";
 $conn = new mysqli($servername, $username, $password, $database);
+$conn->set_charset("utf8mb4"); // 🔥 Garante acentuação e leitura correta
+
 if ($conn->connect_error) {
     die("Falha na conexão: " . $conn->connect_error);
 }
 
-// ===============================
-// BUSCA DE DADOS AUXILIARES (convertendo para arrays)
-// ===============================
+// ===================================
+// FUNÇÃO AUXILIAR PARA CARREGAR DADOS
+// ===================================
 function fetchAll($result) {
-    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    if (!$result) return [];
+    $dados = [];
+    while ($row = $result->fetch_assoc()) {
+        // Limpa espaços, nulos e caracteres invisíveis
+        foreach ($row as $k => $v) {
+            $row[$k] = trim(htmlspecialchars($v ?? '', ENT_QUOTES, 'UTF-8'));
+        }
+        $dados[] = $row;
+    }
+    return $dados;
 }
 
-$anos         = fetchAll($conn->query("SELECT ano FROM anos WHERE ano IS NOT NULL ORDER BY ano DESC"));
-$categorias   = fetchAll($conn->query("SELECT id, nome FROM categorias WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
-$equipes      = fetchAll($conn->query("SELECT id, nome FROM equipes WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
-$pilotos      = fetchAll($conn->query("SELECT id, nome FROM pilotos WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
-$marcas       = fetchAll($conn->query("SELECT id, nome FROM marcas WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
-$fabricantes  = fetchAll($conn->query("SELECT id, nome FROM fabricantes WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
-$escalas      = fetchAll($conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+// ===================================
+// CONSULTAS (com limpeza e filtro real)
+// ===================================
+$anos = fetchAll($conn->query("SELECT DISTINCT ano FROM anos WHERE ano IS NOT NULL AND TRIM(ano) <> '' ORDER BY ano DESC"));
+$categorias = fetchAll($conn->query("SELECT id, nome FROM categorias WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+$equipes = fetchAll($conn->query("SELECT id, nome FROM equipes WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+$pilotos = fetchAll($conn->query("SELECT id, nome FROM pilotos WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+$marcas = fetchAll($conn->query("SELECT id, nome FROM marcas WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+$fabricantes = fetchAll($conn->query("SELECT id, nome FROM fabricantes WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+$escalas = fetchAll($conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -37,6 +60,7 @@ $escalas      = fetchAll($conn->query("SELECT id, nome FROM escalas WHERE nome I
     --azul-claro: #00AEEF;
     --branco: #FFFFFF;
     --cinza: #CFCFCF;
+    --vermelho: #FF6666;
   }
 
   * { box-sizing: border-box; font-family: "Montserrat", sans-serif; }
@@ -128,12 +152,15 @@ $escalas      = fetchAll($conn->query("SELECT id, nome FROM escalas WHERE nome I
     color: var(--branco);
   }
 
+  option {
+    color: #00205B;
+    background-color: #FFFFFF;
+  }
+
   textarea {
     min-height: 100px;
     resize: vertical;
   }
-
-  .select-wrapper { position: relative; width: 100%; }
 
   .fotos {
     display: flex;
@@ -174,6 +201,7 @@ $escalas      = fetchAll($conn->query("SELECT id, nome FROM escalas WHERE nome I
   <a href="dashboard.php">📊 Dashboard</a>
   <a href="cadastro.php">➕ Cadastrar</a>
   <a href="listar_carros.php">📋 Listagem</a>
+  <a href="logout.php" style="color:#FF6666;">🚪 Sair</a>
 </div>
 
 <!-- CONTEÚDO PRINCIPAL -->
@@ -185,47 +213,39 @@ $escalas      = fetchAll($conn->query("SELECT id, nome FROM escalas WHERE nome I
       <legend>🏎️ Dados do Carro</legend>
 
       <label for="ano">Ano</label>
-      <div class="select-wrapper">
-        <select name="ano" id="ano" required>
-          <option value="">Selecione o ano...</option>
-          <?php foreach ($anos as $a): ?>
-            <option value="<?= htmlspecialchars($a['ano']) ?>"><?= htmlspecialchars($a['ano']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+      <select name="ano" id="ano" required>
+        <option value="">Selecione o ano...</option>
+        <?php foreach ($anos as $a): ?>
+          <option value="<?= $a['ano'] ?>"><?= $a['ano'] ?></option>
+        <?php endforeach; ?>
+      </select>
 
       <label for="modelo">Modelo</label>
       <input type="text" id="modelo" name="modelo" maxlength="255" required>
 
       <label for="categoria_id">Categoria</label>
-      <div class="select-wrapper">
-        <select name="categoria_id" id="categoria_id" required>
-          <option value="">Selecione...</option>
-          <?php foreach ($categorias as $c): ?>
-            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nome']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+      <select name="categoria_id" id="categoria_id" required>
+        <option value="">Selecione...</option>
+        <?php foreach ($categorias as $c): ?>
+          <option value="<?= $c['id'] ?>"><?= $c['nome'] ?></option>
+        <?php endforeach; ?>
+      </select>
 
       <label for="equipe_id">Equipe</label>
-      <div class="select-wrapper">
-        <select name="equipe_id" id="equipe_id" required>
-          <option value="">Selecione...</option>
-          <?php foreach ($equipes as $e): ?>
-            <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nome']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+      <select name="equipe_id" id="equipe_id" required>
+        <option value="">Selecione...</option>
+        <?php foreach ($equipes as $e): ?>
+          <option value="<?= $e['id'] ?>"><?= $e['nome'] ?></option>
+        <?php endforeach; ?>
+      </select>
 
       <label for="piloto_id">Piloto</label>
-      <div class="select-wrapper">
-        <select name="piloto_id" id="piloto_id" required>
-          <option value="">Selecione...</option>
-          <?php foreach ($pilotos as $p): ?>
-            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nome']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+      <select name="piloto_id" id="piloto_id" required>
+        <option value="">Selecione...</option>
+        <?php foreach ($pilotos as $p): ?>
+          <option value="<?= $p['id'] ?>"><?= $p['nome'] ?></option>
+        <?php endforeach; ?>
+      </select>
     </fieldset>
 
     <fieldset>
@@ -235,34 +255,28 @@ $escalas      = fetchAll($conn->query("SELECT id, nome FROM escalas WHERE nome I
       <input type="text" id="codigo" name="codigo" maxlength="50" required>
 
       <label for="escala_id">Escala</label>
-      <div class="select-wrapper">
-        <select name="escala_id" id="escala_id" required>
-          <option value="">Selecione...</option>
-          <?php foreach ($escalas as $e): ?>
-            <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nome']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+      <select name="escala_id" id="escala_id" required>
+        <option value="">Selecione...</option>
+        <?php foreach ($escalas as $e): ?>
+          <option value="<?= $e['id'] ?>"><?= $e['nome'] ?></option>
+        <?php endforeach; ?>
+      </select>
 
       <label for="marca_id">Marca</label>
-      <div class="select-wrapper">
-        <select name="marca_id" id="marca_id" required>
-          <option value="">Selecione...</option>
-          <?php foreach ($marcas as $m): ?>
-            <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nome']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+      <select name="marca_id" id="marca_id" required>
+        <option value="">Selecione...</option>
+        <?php foreach ($marcas as $m): ?>
+          <option value="<?= $m['id'] ?>"><?= $m['nome'] ?></option>
+        <?php endforeach; ?>
+      </select>
 
       <label for="fabricante_id">Fabricante</label>
-      <div class="select-wrapper">
-        <select name="fabricante_id" id="fabricante_id" required>
-          <option value="">Selecione...</option>
-          <?php foreach ($fabricantes as $f): ?>
-            <option value="<?= $f['id'] ?>"><?= htmlspecialchars($f['nome']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+      <select name="fabricante_id" id="fabricante_id" required>
+        <option value="">Selecione...</option>
+        <?php foreach ($fabricantes as $f): ?>
+          <option value="<?= $f['id'] ?>"><?= $f['nome'] ?></option>
+        <?php endforeach; ?>
+      </select>
 
       <label for="comentario">Comentário</label>
       <textarea name="comentario" id="comentario" maxlength="1024" placeholder="Insira detalhes adicionais, curiosidades ou observações sobre a miniatura..."></textarea>
