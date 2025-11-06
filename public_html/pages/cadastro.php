@@ -12,15 +12,19 @@ if ($conn->connect_error) {
 }
 
 // ===============================
-// BUSCA DE DADOS AUXILIARES
+// BUSCA DE DADOS AUXILIARES (convertendo para arrays)
 // ===============================
-$anos = $conn->query("SELECT ano FROM anos WHERE ano IS NOT NULL ORDER BY ano DESC");
-$categorias = $conn->query("SELECT id, nome FROM categorias WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC");
-$equipes = $conn->query("SELECT id, nome FROM equipes WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC");
-$pilotos = $conn->query("SELECT id, nome FROM pilotos WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC");
-$marcas = $conn->query("SELECT id, nome FROM marcas WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC");
-$fabricantes = $conn->query("SELECT id, nome FROM fabricantes WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC");
-$escalas = $conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC");
+function fetchAll($result) {
+    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+}
+
+$anos         = fetchAll($conn->query("SELECT ano FROM anos WHERE ano IS NOT NULL ORDER BY ano DESC"));
+$categorias   = fetchAll($conn->query("SELECT id, nome FROM categorias WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+$equipes      = fetchAll($conn->query("SELECT id, nome FROM equipes WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+$pilotos      = fetchAll($conn->query("SELECT id, nome FROM pilotos WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+$marcas       = fetchAll($conn->query("SELECT id, nome FROM marcas WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+$fabricantes  = fetchAll($conn->query("SELECT id, nome FROM fabricantes WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
+$escalas      = fetchAll($conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND TRIM(nome) <> '' ORDER BY nome ASC"));
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -33,7 +37,6 @@ $escalas = $conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND
     --azul-claro: #00AEEF;
     --branco: #FFFFFF;
     --cinza: #CFCFCF;
-    --vermelho: #FF6666;
   }
 
   * { box-sizing: border-box; font-family: "Montserrat", sans-serif; }
@@ -185,9 +188,9 @@ $escalas = $conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND
       <div class="select-wrapper">
         <select name="ano" id="ano" required>
           <option value="">Selecione o ano...</option>
-          <?php while ($a = $anos->fetch_assoc()): ?>
-            <option value="<?= $a['ano'] ?>"><?= $a['ano'] ?></option>
-          <?php endwhile; ?>
+          <?php foreach ($anos as $a): ?>
+            <option value="<?= htmlspecialchars($a['ano']) ?>"><?= htmlspecialchars($a['ano']) ?></option>
+          <?php endforeach; ?>
         </select>
       </div>
 
@@ -198,9 +201,9 @@ $escalas = $conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND
       <div class="select-wrapper">
         <select name="categoria_id" id="categoria_id" required>
           <option value="">Selecione...</option>
-          <?php while ($c = $categorias->fetch_assoc()): ?>
+          <?php foreach ($categorias as $c): ?>
             <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nome']) ?></option>
-          <?php endwhile; ?>
+          <?php endforeach; ?>
         </select>
       </div>
 
@@ -208,9 +211,9 @@ $escalas = $conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND
       <div class="select-wrapper">
         <select name="equipe_id" id="equipe_id" required>
           <option value="">Selecione...</option>
-          <?php while ($e = $equipes->fetch_assoc()): ?>
+          <?php foreach ($equipes as $e): ?>
             <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nome']) ?></option>
-          <?php endwhile; ?>
+          <?php endforeach; ?>
         </select>
       </div>
 
@@ -218,9 +221,9 @@ $escalas = $conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND
       <div class="select-wrapper">
         <select name="piloto_id" id="piloto_id" required>
           <option value="">Selecione...</option>
-          <?php while ($p = $pilotos->fetch_assoc()): ?>
+          <?php foreach ($pilotos as $p): ?>
             <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nome']) ?></option>
-          <?php endwhile; ?>
+          <?php endforeach; ?>
         </select>
       </div>
     </fieldset>
@@ -235,9 +238,9 @@ $escalas = $conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND
       <div class="select-wrapper">
         <select name="escala_id" id="escala_id" required>
           <option value="">Selecione...</option>
-          <?php while ($e = $escalas->fetch_assoc()): ?>
+          <?php foreach ($escalas as $e): ?>
             <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nome']) ?></option>
-          <?php endwhile; ?>
+          <?php endforeach; ?>
         </select>
       </div>
 
@@ -245,9 +248,9 @@ $escalas = $conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND
       <div class="select-wrapper">
         <select name="marca_id" id="marca_id" required>
           <option value="">Selecione...</option>
-          <?php while ($m = $marcas->fetch_assoc()): ?>
+          <?php foreach ($marcas as $m): ?>
             <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nome']) ?></option>
-          <?php endwhile; ?>
+          <?php endforeach; ?>
         </select>
       </div>
 
@@ -255,9 +258,9 @@ $escalas = $conn->query("SELECT id, nome FROM escalas WHERE nome IS NOT NULL AND
       <div class="select-wrapper">
         <select name="fabricante_id" id="fabricante_id" required>
           <option value="">Selecione...</option>
-          <?php while ($f = $fabricantes->fetch_assoc()): ?>
+          <?php foreach ($fabricantes as $f): ?>
             <option value="<?= $f['id'] ?>"><?= htmlspecialchars($f['nome']) ?></option>
-          <?php endwhile; ?>
+          <?php endforeach; ?>
         </select>
       </div>
 
