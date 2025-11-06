@@ -1,6 +1,18 @@
 <?php
+// ===================================
+// RSP DIECAST - INDEX PRINCIPAL
+// ===================================
+
+session_start();
+
+// 🔐 Proteção de acesso
+if (!isset($_SESSION['usuario'])) {
+    header("Location: ../index.php"); // volta para o login
+    exit;
+}
+
 // ==============================
-// DB
+// CONFIGURAÇÃO DO BANCO
 // ==============================
 $servername = "localhost";
 $username   = "rspdiecast_usrmaster";
@@ -8,82 +20,229 @@ $password   = "X7OjyzhHH2";
 $database   = "rspdiecast_dbsystem";
 
 $conn = new mysqli($servername, $username, $password, $database);
-if ($conn->connect_error) { die("Falha na conexão: " . $conn->connect_error); }
+if ($conn->connect_error) {
+    die("Falha na conexão: " . $conn->connect_error);
+}
 
-// Últimas 10
-$ultimas = $conn->query("SELECT id, ano, modelo, codigo, fotos FROM carros ORDER BY id DESC LIMIT 10");
+// ==============================
+// CONSULTAS
+// ==============================
 
-// Total
+// Últimas 10 miniaturas
+$ultimas = $conn->query("
+    SELECT id, ano, modelo, codigo, fotos 
+    FROM carros 
+    ORDER BY id DESC 
+    LIMIT 10
+");
+
+// Total de miniaturas
 $total = $conn->query("SELECT COUNT(*) AS t FROM carros")->fetch_assoc()['t'] ?? 0;
 
-// helper para foto
+// ==============================
+// Função para retornar a imagem principal
+// ==============================
 function foto_principal($jsonFotos) {
-  $placeholder = "https://via.placeholder.com/250x150?text=Sem+Imagem";
-  if (!$jsonFotos) return $placeholder;
+    $placeholder = "https://via.placeholder.com/250x150?text=Sem+Imagem";
+    if (!$jsonFotos) return $placeholder;
 
-  $arr = json_decode($jsonFotos, true);
-  if (!is_array($arr) || empty($arr)) return $placeholder;
+    $arr = json_decode($jsonFotos, true);
+    if (!is_array($arr) || empty($arr)) return $placeholder;
 
-  // caminho relativo para o navegador
-  $srcWeb = $arr[0];
+    $srcWeb = $arr[0];
+    $absPath = __DIR__ . '/' . ltrim($srcWeb, '/');
 
-  // validar no disco (considerando index.php em public_html)
-  $absPath = __DIR__ . '/' . ltrim($srcWeb, '/');
-  if (file_exists($absPath)) return $srcWeb;
+    if (file_exists($absPath)) return $srcWeb;
 
-  // fallback: se salvaram com "../uploads/..."
-  if (strpos($srcWeb, '../') === 0) {
-    $alt = substr($srcWeb, 3); // remove "../"
-    if (file_exists(__DIR__ . '/' . $alt)) return $alt;
-  }
+    // Corrige se tiver "../uploads/"
+    if (strpos($srcWeb, '../') === 0) {
+        $alt = substr($srcWeb, 3);
+        if (file_exists(__DIR__ . '/' . $alt)) return $alt;
+    }
 
-  return $placeholder;
+    return $placeholder;
 }
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RSP Diecast | Sistema</title>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <style>
   :root {
-    --azul-escuro:#00205B; --azul-claro:#00AEEF; --branco:#FFF; --cinza:#CFCFCF;
+    --azul-escuro: #00205B;
+    --azul-claro: #00AEEF;
+    --branco: #FFFFFF;
+    --cinza: #CFCFCF;
   }
-  *{box-sizing:border-box;font-family:Montserrat,Arial,Helvetica,sans-serif}
-  body{margin:0;background:var(--azul-escuro);color:var(--branco);display:flex;min-height:100vh}
-  /* Lateral */
-  .menu{width:240px;background:#001B47;border-right:2px solid var(--azul-claro);padding:24px 18px;display:flex;flex-direction:column;gap:10px}
-  .logo{color:var(--azul-claro);font-weight:800;font-size:1.2rem;margin-bottom:4px}
-  .sub{color:#89cfff;font-size:.85rem;margin-bottom:18px}
-  .menu a{display:block;color:var(--branco);text-decoration:none;font-weight:700;padding:10px 12px;border-radius:8px;transition:.2s}
-  .menu a:hover{background:var(--azul-claro);color:var(--azul-escuro)}
-  .resumo{margin-top:24px}
-  .resumo h3{color:var(--azul-claro);margin:0 0 8px 0;font-size:1rem}
-  .resumo table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.05);border:1px solid var(--azul-claro);border-radius:10px;overflow:hidden}
-  .resumo th,.resumo td{border-bottom:1px solid var(--azul-claro);padding:10px 12px;text-align:left}
-  .resumo th{background:var(--azul-claro);color:var(--branco)}
-  /* Conteúdo */
-  .content{flex:1;padding:28px}
-  h1{margin:0 0 18px 0;color:var(--azul-claro)}
-  .grid{display:flex;flex-wrap:wrap;gap:20px}
-  .card{width:260px;background:rgba(255,255,255,.05);border:1px solid var(--azul-claro);border-radius:12px;padding:14px;transition:.2s}
-  .card:hover{transform:scale(1.02);background:rgba(255,255,255,.08)}
-  .thumb{width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;background:#0a1e4c}
-  .meta{font-size:.95rem;line-height:1.35}
-  .muted{opacity:.85}
-  /* Responsivo */
-  @media (max-width: 900px){
-    .menu{position:fixed;left:0;top:0;bottom:0;z-index:10;transform:translateX(0)}
-    .content{margin-left:240px}
+
+  * {
+    box-sizing: border-box;
+    font-family: "Montserrat", sans-serif;
   }
-  @media (max-width: 640px){
-    .menu{width:200px}
-    .content{margin-left:200px}
-    .card{width:calc(50% - 10px)}
+
+  body {
+    margin: 0;
+    background: var(--azul-escuro);
+    color: var(--branco);
+    display: flex;
+    min-height: 100vh;
   }
-  @media (max-width: 480px){
-    .card{width:100%}
+
+  /* ===== MENU LATERAL ===== */
+  .menu {
+    width: 240px;
+    background: #001B47;
+    border-right: 2px solid var(--azul-claro);
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .logo {
+    color: var(--azul-claro);
+    font-weight: 800;
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+  }
+
+  .sub {
+    color: #89cfff;
+    font-size: 0.9rem;
+    margin-bottom: 18px;
+  }
+
+  .menu a {
+    display: block;
+    color: var(--branco);
+    text-decoration: none;
+    font-weight: 700;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: 0.2s;
+  }
+
+  .menu a:hover {
+    background: var(--azul-claro);
+    color: var(--azul-escuro);
+  }
+
+  /* ===== RESUMO ===== */
+  .resumo {
+    margin-top: 24px;
+  }
+
+  .resumo h3 {
+    color: var(--azul-claro);
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+  }
+
+  .resumo table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--azul-claro);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .resumo th,
+  .resumo td {
+    border-bottom: 1px solid var(--azul-claro);
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  .resumo th {
+    background: var(--azul-claro);
+    color: var(--branco);
+  }
+
+  /* ===== BOTÃO LOGOUT ===== */
+  .logout {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid var(--azul-claro);
+  }
+
+  .logout a {
+    color: #FF6666;
+    font-weight: bold;
+    text-decoration: none;
+    display: block;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: 0.2s;
+  }
+
+  .logout a:hover {
+    background: #FF6666;
+    color: var(--branco);
+  }
+
+  /* ===== CONTEÚDO ===== */
+  .content {
+    flex: 1;
+    padding: 28px;
+  }
+
+  h1 {
+    margin: 0 0 18px 0;
+    color: var(--azul-claro);
+  }
+
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .card {
+    width: 260px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--azul-claro);
+    border-radius: 12px;
+    padding: 14px;
+    transition: 0.2s;
+  }
+
+  .card:hover {
+    transform: scale(1.02);
+    background: rgba(255,255,255,0.08);
+  }
+
+  .thumb {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: #0A1E4C;
+  }
+
+  .meta {
+    font-size: 0.95rem;
+    line-height: 1.35;
+  }
+
+  .muted {
+    opacity: 0.85;
+  }
+
+  /* ===== RESPONSIVO ===== */
+  @media (max-width: 900px) {
+    .menu { width: 200px; }
+    .content { margin-left: 200px; }
+    .card { width: calc(50% - 10px); }
+  }
+
+  @media (max-width: 600px) {
+    .menu { width: 180px; }
+    .content { margin-left: 180px; }
+    .card { width: 100%; }
   }
 </style>
 </head>
@@ -105,9 +264,13 @@ function foto_principal($jsonFotos) {
       <tr><td><strong><?= (int)$total ?></strong></td></tr>
     </table>
   </div>
+
+  <div class="logout">
+    <a href="logout.php">🚪 Sair</a>
+  </div>
 </aside>
 
-<!-- CONTEÚDO -->
+<!-- CONTEÚDO PRINCIPAL -->
 <main class="content">
   <h1>🧱 Últimas 10 Miniaturas</h1>
 
