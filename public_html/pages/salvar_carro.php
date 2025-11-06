@@ -27,41 +27,30 @@ $fabricante_id = $_POST['fabricante_id'] ?? null;
 $comentario = $_POST['comentario'] ?? null;
 
 // ===================================
-// UPLOAD DE FOTOS — AJUSTADO
+// UPLOAD DE FOTOS (CORRIGIDO)
 // ===================================
-$uploadDir = realpath(__DIR__ . '/../uploads/') . '/';
+$uploadDir = __DIR__ . "/uploads/";
+$webPath = "uploads/"; // caminho usado no navegador
 
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 
 $fotos = [];
-
 for ($i = 1; $i <= 3; $i++) {
     if (!empty($_FILES["foto$i"]["name"])) {
-        $ext = strtolower(pathinfo($_FILES["foto$i"]["name"], PATHINFO_EXTENSION));
-        $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
+        $fileName = time() . "_foto" . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', basename($_FILES["foto$i"]["name"]));
+        $targetPath = $uploadDir . $fileName;
 
-        if (!in_array($ext, $permitidas)) {
-            $mensagem = "❌ Formato de imagem inválido em foto $i. Use JPG, PNG ou WEBP.";
-            include 'mensagem.php';
-            exit;
-        }
-
-        $fileName = time() . "_foto$i_" . basename($_FILES["foto$i"]["name"]);
-        $destinoCompleto = $uploadDir . $fileName;
-
-        if (move_uploaded_file($_FILES["foto$i"]["tmp_name"], $destinoCompleto)) {
-            $fotos[] = 'uploads/' . $fileName;
-        } else {
-            $mensagem = "❌ Erro ao enviar a imagem $i.";
-            include 'mensagem.php';
-            exit;
+        if (move_uploaded_file($_FILES["foto$i"]["tmp_name"], $targetPath)) {
+            // salva apenas o caminho relativo correto
+            $fotos[] = $webPath . $fileName;
         }
     }
 }
 
 $fotosJSON = !empty($fotos) ? json_encode($fotos) : null;
+
 
 // ===================================
 // INSERÇÃO NO BANCO
