@@ -37,7 +37,8 @@ $ultimas = $conn->query("
 ");
 
 // Total de miniaturas
-$total = $conn->query("SELECT COUNT(*) AS t FROM carros")->fetch_assoc()['t'] ?? 0;
+$totalRow = $conn->query("SELECT COUNT(*) AS t FROM carros")->fetch_assoc();
+$total    = $totalRow['t'] ?? 0;
 
 // ==============================
 // Função para retornar a imagem principal
@@ -50,11 +51,17 @@ function foto_principal($jsonFotos) {
     if (!is_array($arr) || empty($arr)) return $placeholder;
 
     $srcWeb = $arr[0];
-    $absPath = __DIR__ . '/' . ltrim($srcWeb, '/');
 
-    if (file_exists($absPath)) return $srcWeb;
+    // remove barra inicial se houver
+    $srcWeb = ltrim($srcWeb, '/');
 
-    // Corrige se tiver "../uploads/"
+    $absPath = __DIR__ . '/' . $srcWeb;
+
+    if (file_exists($absPath)) {
+        return $srcWeb; // caminho relativo a /pages
+    }
+
+    // Corrige se tiver "../uploads/..."
     if (strpos($srcWeb, '../') === 0) {
         $alt = substr($srcWeb, 3);
         if (file_exists(__DIR__ . '/' . $alt)) return $alt;
@@ -200,6 +207,13 @@ function foto_principal($jsonFotos) {
     gap: 20px;
   }
 
+  /* Link que envolve o card */
+  .card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
   .card {
     width: 260px;
     background: rgba(255,255,255,0.05);
@@ -207,6 +221,7 @@ function foto_principal($jsonFotos) {
     border-radius: 12px;
     padding: 14px;
     transition: 0.2s;
+    cursor: pointer;
   }
 
   .card:hover {
@@ -278,14 +293,19 @@ function foto_principal($jsonFotos) {
     <section class="grid">
       <?php while($r = $ultimas->fetch_assoc()): ?>
         <?php $src = foto_principal($r['fotos']); ?>
-        <article class="card">
-          <img class="thumb" src="<?= htmlspecialchars($src) ?>" alt="Miniatura">
-          <div class="meta">
-            <strong><?= htmlspecialchars($r['modelo'] ?: '—') ?></strong><br>
-            <span class="muted"><b>Ano:</b> <?= htmlspecialchars($r['ano'] ?: '—') ?></span><br>
-            <span class="muted"><b>Código:</b> <?= htmlspecialchars($r['codigo'] ?: '—') ?></span>
-          </div>
-        </article>
+
+        <!-- LINK indo direto para a página da miniatura -->
+        <a class="card-link" href="ver_miniatura.php?id=<?= (int)$r['id'] ?>">
+          <article class="card">
+            <img class="thumb" src="<?= htmlspecialchars($src) ?>" alt="Miniatura">
+            <div class="meta">
+              <strong><?= htmlspecialchars($r['modelo'] ?: '—') ?></strong><br>
+              <span class="muted"><b>Ano:</b> <?= htmlspecialchars($r['ano'] ?: '—') ?></span><br>
+              <span class="muted"><b>Código:</b> <?= htmlspecialchars($r['codigo'] ?: '—') ?></span>
+            </div>
+          </article>
+        </a>
+
       <?php endwhile; ?>
     </section>
   <?php else: ?>
