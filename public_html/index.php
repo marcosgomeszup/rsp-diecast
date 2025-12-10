@@ -1,139 +1,136 @@
 <?php
-// ===================================
-// Página principal pós-login
-// ===================================
 session_start();
-if (!isset($_SESSION['usuario'])) {
-  header("Location: /index.php");
-  exit;
-}
 
-require_once __DIR__ . '/../includes/conexao.php';
-
-// últimas 10
-$ultimas = $conn->query("SELECT id, ano, modelo, codigo, fotos FROM carros ORDER BY id DESC LIMIT 10");
-
-// total
-$total = $conn->query("SELECT COUNT(*) AS t FROM carros")->fetch_assoc()['t'] ?? 0;
-
-// normaliza e valida caminho de imagem salvo no banco
-function foto_principal($jsonFotos) {
-  $placeholder = "https://via.placeholder.com/250x150?text=Sem+Imagem";
-  if (!$jsonFotos) return $placeholder;
-  $arr = json_decode($jsonFotos, true);
-  if (!is_array($arr) || empty($arr)) return $placeholder;
-
-  // esperado: "uploads/nome.jpg"
-  $p = $arr[0];
-
-  // normalizações
-  $p = str_replace('\\', '/', $p);
-  $p = ltrim($p, '/');
-  if (strpos($p, 'public_html/') === 0) $p = substr($p, strlen('public_html/'));
-  if (strpos($p, '../') === 0)       $p = substr($p, 3);
-
-  // valida no disco (esta página está em /public_html/pages)
-  $absFromPages = __DIR__ . '/../' . $p;              // -> /public_html/...
-  if (file_exists($absFromPages)) return '/' . $p;    // retorna URL web absoluta
-
-  // tenta DOCUMENT_ROOT
-  $absFromRoot = rtrim($_SERVER['DOCUMENT_ROOT'] ?? (__DIR__ . '/..'), '/') . '/' . $p;
-  if (file_exists($absFromRoot)) return '/' . $p;
-
-  // por fim, tenta mesmo assim e deixa onerror resolver
-  return '/' . $p;
+// Se já estiver logado, manda direto pro painel
+if (isset($_SESSION['usuario'])) {
+    header("Location: /pages/index.php");
+    exit;
 }
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>RSP Diecast | Início</title>
+<title>RSP Diecast | Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
 <style>
-  :root { --azul-escuro:#00205B; --azul-claro:#00AEEF; --branco:#FFF; --cinza:#CFCFCF; }
-  *{box-sizing:border-box;font-family:Montserrat,Arial,Helvetica,sans-serif}
-  body{margin:0;background:var(--azul-escuro);color:var(--branco);display:flex;min-height:100vh}
-
-  /* Lateral */
-  .menu{width:240px;background:#001B47;border-right:2px solid var(--azul-claro);padding:24px 18px;display:flex;flex-direction:column;gap:10px}
-  .logo{color:var(--azul-claro);font-weight:800;font-size:1.2rem;margin-bottom:4px}
-  .sub{color:#89cfff;font-size:.85rem;margin-bottom:18px}
-  .menu a{display:block;color:var(--branco);text-decoration:none;font-weight:700;padding:10px 12px;border-radius:8px;transition:.2s}
-  .menu a:hover{background:var(--azul-claro);color:var(--azul-escuro)}
-  .resumo{margin-top:24px}
-  .resumo h3{color:var(--azul-claro);margin:0 0 8px 0;font-size:1rem}
-  .resumo table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.05);border:1px solid var(--azul-claro);border-radius:10px;overflow:hidden}
-  .resumo th,.resumo td{border-bottom:1px solid var(--azul-claro);padding:10px 12px;text-align:left}
-  .resumo th{background:var(--azul-claro);color:var(--branco)}
-
-  /* Conteúdo */
-  .content{flex:1;padding:28px}
-  h1{margin:0 0 18px 0;color:var(--azul-claro)}
-  .grid{display:flex;flex-wrap:wrap;gap:20px}
-  .card{width:260px;background:rgba(255,255,255,.05);border:1px solid var(--azul-claro);border-radius:12px;padding:14px;transition:.2s}
-  .card:hover{transform:scale(1.02);background:rgba(255,255,255,.08)}
-  .thumb{width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;background:#0a1e4c}
-  .meta{font-size:.95rem;line-height:1.35}
-  .muted{opacity:.85}
-
-  @media (max-width: 900px){
-    .menu{position:fixed;left:0;top:0;bottom:0;z-index:10}
-    .content{margin-left:240px}
+  :root {
+    --azul-escuro: #001433;
+    --azul-neon: #28CFFF;
+    --branco: #FFF;
   }
-  @media (max-width: 640px){
-    .menu{width:200px}
-    .content{margin-left:200px}
-    .card{width:calc(50% - 10px)}
+  *{
+    box-sizing:border-box;
+    font-family:Montserrat,Arial,Helvetica,sans-serif;
   }
-  @media (max-width: 480px){ .card{width:100%} }
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:radial-gradient(circle at top center,#00224d 0%,#00112c 40%,#000814 100%);
+    color:var(--branco);
+  }
+  .login-container{
+    width:380px;
+    padding:40px 36px 32px;
+    border-radius:16px;
+    background:linear-gradient(180deg,#020d24 0%,#001226 100%);
+    border:2px solid var(--azul-neon);
+    box-shadow:0 0 18px rgba(40,207,255,.4),0 18px 40px rgba(0,0,0,.7);
+    text-align:center;
+  }
+  .login-title{
+    font-size:1.3rem;
+    margin:18px 0 20px;
+    color:var(--azul-neon);
+    font-weight:700;
+  }
+  .input-field{
+    width:100%;
+    padding:12px;
+    margin-bottom:10px;
+    border-radius:8px;
+    border:none;
+    font-size:.9rem;
+    background:#e9eef5;
+  }
+  .btn-submit{
+    width:100%;
+    padding:12px;
+    margin-top:8px;
+    border-radius:8px;
+    border:none;
+    background:linear-gradient(90deg,#00AEEF,var(--azul-neon));
+    color:#00205B;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,174,239,.4);
+    transition:.2s;
+  }
+  .btn-submit:hover{
+    transform:scale(1.03);
+    box-shadow:0 6px 20px rgba(0,174,239,.6);
+  }
+  .divider{
+    margin:18px 0 12px;
+    font-size:.85rem;
+    opacity:.75;
+  }
+  .btn-google{
+    padding:10px 16px;
+    border-radius:8px;
+    border:none;
+    background:#fff;
+    color:#000;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s;
+  }
+  .btn-google:hover{background:#f2f2f2;}
+
+  /* BLOCO DE ERRO */
+  .login-error {
+      background: rgba(255, 70, 70, 0.12);
+      border: 1px solid rgba(255, 120, 120, 0.45);
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      font-size: .85rem;
+      color: #ffb3b3;
+      text-align: center;
+      box-shadow: 0 0 8px rgba(255, 0, 0, 0.25);
+    }
 </style>
 </head>
 <body>
 
-<!-- LATERAL -->
-<aside class="menu">
-  <div class="logo">🏁 RSP Diecast</div>
-  <div class="sub">Racing Collection</div>
+<div class="login-container">
+  <img src="logo.png" alt="RSP Diecast" style="width:150px;">
+  <div class="login-title">Login do Sistema</div>
 
-  <a href="dashboard.php">📊 Dashboard</a>
-  <a href="cadastro.php">➕ Cadastrar</a>
-  <a href="listar_carros.php">📋 Listagem</a>
-
-  <div class="resumo">
-    <h3>📈 Resumo</h3>
-    <table>
-      <tr><th>Total de Miniaturas</th></tr>
-      <tr><td><strong><?= (int)$total ?></strong></td></tr>
-    </table>
-  </div>
-</aside>
-
-<!-- CONTEÚDO -->
-<main class="content">
-  <h1>🧱 Últimas 10 Miniaturas</h1>
-
-  <?php if ($ultimas && $ultimas->num_rows > 0): ?>
-    <section class="grid">
-      <?php while($r = $ultimas->fetch_assoc()): ?>
-        <?php $src = foto_principal($r['fotos']); ?>
-        <article class="card">
-          <img class="thumb"
-               src="<?= htmlspecialchars($src) ?>"
-               alt="Miniatura"
-               onerror="this.onerror=null;this.src='https://via.placeholder.com/250x150?text=Sem+Imagem';">
-          <div class="meta">
-            <strong><?= htmlspecialchars($r['modelo'] ?: '—') ?></strong><br>
-            <span class="muted"><b>Ano:</b> <?= htmlspecialchars($r['ano'] ?: '—') ?></span><br>
-            <span class="muted"><b>Código:</b> <?= htmlspecialchars($r['codigo'] ?: '—') ?></span>
-          </div>
-        </article>
-      <?php endwhile; ?>
-    </section>
-  <?php else: ?>
-    <p>Nenhuma miniatura cadastrada ainda.</p>
+  <!-- EXIBE ERRO DE LOGIN (SE HOUVER) -->
+  <?php if (!empty($_SESSION['erro_login'])): ?>
+      <div class="login-error">
+          <?= htmlspecialchars($_SESSION['erro_login']) ?>
+      </div>
+      <?php unset($_SESSION['erro_login']); ?>
   <?php endif; ?>
-</main>
+
+  <form method="POST" action="login_processa.php">
+    <input class="input-field" type="email" name="email" placeholder="E-mail" required>
+    <input class="input-field" type="password" name="senha" placeholder="Senha" required>
+    <button class="btn-submit" type="submit">ENTRAR</button>
+  </form>
+
+  <div class="divider">ou</div>
+
+  <button class="btn-google" type="button">
+    Entrar com Google
+  </button>
+</div>
 
 </body>
 </html>
